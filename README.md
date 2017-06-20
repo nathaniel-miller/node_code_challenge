@@ -22,3 +22,7 @@ get the update from stdin.
 
 The Same problem exists with `reporter.js` as I've written the two scripts on the
 same principles.
+
+##Update:
+Problem solved. I wasn't calling the callbacks from my write streams. I thought I didn't need them since they are completely empty functions, but
+it looks as though they need to be called in order to keep the stream flowing properly.
