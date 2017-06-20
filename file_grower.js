@@ -44,7 +44,10 @@ const readable2 = new stream.Readable({
 const writable1 = new stream.Writable({
   write(data, enc, callback){
     console.log('CheckPoint 2', data);
+
+    data = data.toString().toUpperCase();
     readable1.push(data);
+
     callback();
   }
 });
@@ -52,7 +55,10 @@ const writable1 = new stream.Writable({
 const writable2 = new stream.Writable({
   write(data, enc, callback){
     console.log('CheckPoint 4', data);
+
+    data = data.toString().split(',').join('');
     readable2.push(data);
+
     callback();
   }
 });
