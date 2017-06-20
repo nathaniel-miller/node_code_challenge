@@ -4,7 +4,6 @@ const stream = require('stream');
 const fs = require('fs');
 
 let start;
-let hrstart;
 let chunkstart;
 let totalLines = 0;
 let totalBytes = 0;
@@ -59,21 +58,14 @@ reporter.on('data', data => {
 
 
 (function startClock(){
-  const now = new Date();
+  const now = process.hrtime();
 
-  if (!start) {
-    start = now;
-    hrstart = process.hrtime();
-  }
-
+  if (!start) start = now;
   chunkstart = now;
 })();
 
 
 function objectifyChunk(chunk){
-
-  let end = new Date();
-  let hrend = process.hrtime(hrstart);
 
   let lineCount = chunk.toString().split('\n').length - 1;
   totalLines += lineCount;
@@ -81,7 +73,7 @@ function objectifyChunk(chunk){
   let bytes = chunk.length;
   totalBytes += bytes;
 
-  const obj = new ChunkData((end - chunkstart), bytes, lineCount);
+  const obj = new ChunkData(process.hrtime(chunkstart), bytes, lineCount);
 
   return obj;
 }
@@ -93,8 +85,8 @@ function issueIndividualReport(chunk) {
 
 
 function issueTotalReport() {
-  let totalTime = endTime - startTime;
-  let bps = Math.floor(totalBytes / (totalTime/1000));
+  let totalTime = process.hrtime(start);
+  let bps = Math.round((totalBytes / (totalTime[1]/1000000) * 100)) / 100;
 
   return `Report: ${totalLines} lines processed at an average speed of ${bps} bytes/second.\n`;
 }
