@@ -3,16 +3,19 @@
 const stream = require('stream');
 const fs = require('fs');
 
-let startTime;
-let chunkStartTime;
+let start;
+let hrstart;
+let chunkstart;
 let totalLines = 0;
 let totalBytes = 0;
+
 
 
 const objectifier = new stream.Duplex({
   objectMode: true,
   write(chunk, enc, callback) {
     objectifier.push(objectifyChunk(chunk));
+    callback();
   },
   read(size) {/*...*/},
 });
@@ -30,37 +33,47 @@ const reporter = new stream.Duplex({
     }
 
     reporter.push(reports);
+    callback();
   },
   read(size){/*...*/}
 });
 
 
 
-startClock();
-
-process.stdin.pipe(objectifier);
-objectifier.pipe(reporter);
-reporter.on('data', reports => {
-  logger(reports);
+process.stdin.on('data', data => {
+  objectifier.write(data, err => {
+    if (err) throw err;
+  });
 });
 
 objectifier.on('data', data => {
-  console.log(data);
-})
+  reporter.write(data, err => {
+    if (err) throw err;
+  });
+});
+
+reporter.on('data', data => {
+  logger(data);
+});
 
 
 
-function startClock(){
-  const now = new Date().getTime();
+(function startClock(){
+  const now = new Date();
 
-  if (!startTime) startTime = now;
-  chunkStartTime = now;
-};
+  if (!start) {
+    start = now;
+    hrstart = process.hrtime();
+  }
+
+  chunkstart = now;
+})();
 
 
 function objectifyChunk(chunk){
 
-  endTime = new Date().getTime();
+  let end = new Date();
+  let hrend = process.hrtime(hrstart);
 
   let lineCount = chunk.toString().split('\n').length - 1;
   totalLines += lineCount;
@@ -68,7 +81,7 @@ function objectifyChunk(chunk){
   let bytes = chunk.length;
   totalBytes += bytes;
 
-  const obj = new ChunkData((endTime - chunkStartTime), bytes, lineCount);
+  const obj = new ChunkData((end - chunkstart), bytes, lineCount);
 
   return obj;
 }
