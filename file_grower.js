@@ -31,65 +31,8 @@ function maxOf(n) {
   return Math.floor(Math.random() * n);
 }
 
-
-// *******************************************************
-// const readable1 = new stream.Readable({
-//   read(size){/*...*/}
-// });
-//
-// const readable2 = new stream.Readable({
-//   read(size){/*...*/}
-// });
-//
-// const writable1 = new stream.Writable({
-//   write(data, enc, callback){
-//     console.log('CheckPoint 2', data);
-//
-//     readable1.push(data.toString().toUpperCase(););
-//
-//     callback();
-//   }
-// });
-
-// const writable2 = new stream.Writable({
-//   write(data, enc, callback){
-//     console.log('CheckPoint 4', data);
-//
-//     readable2.push(data.toString().split(',').join(''););
-//
-//     callback();
-//   }
-// });
-
-// -----  -----  -------   ----- ----   ---------
-//Readable Stream gets data -> writes that data to a writeable stream.
-//That writable stream pushes the data to the next readable stream.
-
-// process.stdin.on('data', data => {
-//   console.log('CheckPoint 1', data);
-//   writable1.write(data, () => {
-//     console.log('CheckPoint 2.b', data);
-//   });
-// });
-//
-// // readable1.pipe(writeable2);
-// readable1.on('data', data => {
-//   console.log('CheckPoint 3', data);
-//
-//   writable2.write(data, () => {
-//     console.log('CheckPoint 4.b');
-//   });
-// });
-//
-// readable2.pipe(process.stdout);
-// *******************************************************
-
-
-function startGrow(file) {
-  setInterval(growFile, 5000, file);
+function startGrow(rate, file) {
+  setInterval(growFile, rate, file);
 }
-
-
-// process.stdin.pipe(process.stdout); //Works as expected.
 
 module.exports.growFile = startGrow;
