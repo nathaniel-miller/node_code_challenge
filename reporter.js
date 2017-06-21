@@ -9,6 +9,8 @@ let rate;
 let totalLines = 0;
 let totalBytes = 0;
 
+
+
 const objectifier = new stream.Duplex({
   objectMode: true,
   write(chunk, enc, callback) {
@@ -32,14 +34,9 @@ const reporter = new stream.Duplex({
 
 
 
-
-
-
-
 (function setRate() {
   const input = process.argv[3];
   !!Number(input) ? rate = input : rate = 1000;
-  console.log()
 })();
 
 (function startClock(){
