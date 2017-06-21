@@ -74,20 +74,6 @@ function objectifyChunk(chunk){
   return obj;
 }
 
-
-function issueIndividualReport(chunk) {
-  return `Time: ${chunk['elapsedTime']} ms\nBytes: ${chunk['bytes']}\nLines: ${chunk['lines']}\n`
-}
-
-
-function issueTotalReport() {
-  let totalTime = process.hrtime(start);
-  let ts = ((totalTime[0] * 1000) + (totalTime[1]/1000000)) / 1000
-  let bps = totalBytes / ts
-
-  return `Report: ${totalLines} lines processed at an average speed of ${bps} bytes/second.\n`;
-}
-
 function issueReport(data) {
     const seconds = (data['elapsedTime'] / 1000);
     const bps = (data['totalBytes'] / seconds);
