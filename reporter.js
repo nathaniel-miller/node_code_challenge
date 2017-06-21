@@ -5,6 +5,7 @@ const fs = require('fs');
 const file_grower = require('./file_grower');
 
 let start;
+let rate;
 let totalLines = 0;
 let totalBytes = 0;
 
@@ -31,6 +32,22 @@ const reporter = new stream.Duplex({
 
 
 
+
+
+
+
+(function setRate() {
+  const input = process.argv[3];
+  !!Number(input) ? rate = input : rate = 1000;
+  console.log()
+})();
+
+(function startClock(){
+  if (!start) start = process.hrtime();
+})();
+
+if (process.argv[2]) file_grower.growFile(rate, process.argv[2]);
+
 process.stdin.on('data', data => {
   chunkstart = process.hrtime();
 
@@ -49,13 +66,6 @@ reporter.on('data', data => {
   logger(data);
 });
 
-file_grower.growFile(process.argv[2]);
-
-
-
-(function startClock(){
-  if (!start) start = process.hrtime();
-})();
 
 
 function objectifyChunk(chunk){
@@ -69,7 +79,7 @@ function objectifyChunk(chunk){
   let time = process.hrtime(start);
   let ms = (time[0] * 1000) + (time[1]/1000000)
 
-  const obj = new ProcessData(ms, bytes, lines);
+  const obj = new ProcessData(ms, totalBytes, totalLines);
 
   return obj;
 }
