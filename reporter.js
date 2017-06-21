@@ -68,7 +68,7 @@ function objectifyChunk(chunk){
   totalBytes += bytes;
 
   let time = process.hrtime(start);
-  let ms = (time[0] * 1000) + (time[1]/1000000)
+  let ms = (time[0] * 1000) + (time[1]/1000000);
 
   const obj = new ProcessData(ms, totalBytes, totalLines);
 
