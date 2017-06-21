@@ -23,7 +23,6 @@ const objectifier = new stream.Duplex({
 const reporter = new stream.Duplex({
   objectMode: true,
   write(obj, enc, callback) {
-
     const report = issueReport(obj);
 
     reporter.push(report);
@@ -48,15 +47,11 @@ if (process.argv[2]) file_grower.growFile(rate, process.argv[2]);
 process.stdin.on('data', data => {
   chunkstart = process.hrtime();
 
-  objectifier.write(data, err => {
-    if (err) throw err;
-  });
+  objectifier.write(data, () => {});
 });
 
 objectifier.on('data', data => {
-  reporter.write(data, err => {
-    if (err) throw err;
-  });
+  reporter.write(data, () => {});
 });
 
 reporter.on('data', data => {
@@ -66,7 +61,6 @@ reporter.on('data', data => {
 
 
 function objectifyChunk(chunk){
-
   let lines = chunk.toString().split('\n').length - 1;
   totalLines += lines;
 
@@ -82,25 +76,19 @@ function objectifyChunk(chunk){
 }
 
 function issueReport(data) {
-    const seconds = (data['elapsedTime'] / 1000);
-    const bps = (data['totalBytes'] / seconds);
+  const seconds = (data['elapsedTime'] / 1000);
+  const bps = (data['totalBytes'] / seconds);
 
-    return `Report: ${data['totalLines']} lines processed at an average speed of ${bps} bytes/second.\n`;
+  return `Report: ${data['totalLines']} lines processed at an average speed of ${bps} bytes/second.\n`;
 }
 
 
 function logger(report) {
-
-  fs.appendFile('logfile', report, err => {
-    if (err) throw err;
-  });
-
-  fs.appendFile('logfile', '--- --- ---\n', err => {
-    if (err) throw err;
-
+  fs.appendFile('logfile', report, () => {});
+  fs.appendFile('logfile', '--- --- ---\n', () => {
     console.log(report);
-    console.log('...saved to logfile.');
-  })
+    console.log('. . .saved to logfile.');
+  });
 }
 
 function ProcessData (elapsedTime, totalBytes, totalLines){
