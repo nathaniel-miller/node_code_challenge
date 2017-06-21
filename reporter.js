@@ -2,13 +2,11 @@
 
 const stream = require('stream');
 const fs = require('fs');
+const file_grower = require('./file_grower');
 
 let start;
-let chunkstart;
 let totalLines = 0;
 let totalBytes = 0;
-
-
 
 const objectifier = new stream.Duplex({
   objectMode: true,
@@ -23,15 +21,9 @@ const reporter = new stream.Duplex({
   objectMode: true,
   write(obj, enc, callback) {
 
-    const iReport = issueIndividualReport(obj);
-    const tReport = issueTotalReport();
+    const report = issueReport(obj);
 
-    const reports = {
-      'iReport' : iReport,
-      'tReport' : tReport
-    }
-
-    reporter.push(reports);
+    reporter.push(report);
     callback();
   },
   read(size){/*...*/}
@@ -40,6 +32,8 @@ const reporter = new stream.Duplex({
 
 
 process.stdin.on('data', data => {
+  chunkstart = process.hrtime();
+
   objectifier.write(data, err => {
     if (err) throw err;
   });
@@ -55,25 +49,27 @@ reporter.on('data', data => {
   logger(data);
 });
 
+file_grower.growFile(process.argv[2]);
+
 
 
 (function startClock(){
-  const now = process.hrtime();
-
-  if (!start) start = now;
-  chunkstart = now;
+  if (!start) start = process.hrtime();
 })();
 
 
 function objectifyChunk(chunk){
 
-  let lineCount = chunk.toString().split('\n').length - 1;
-  totalLines += lineCount;
+  let lines = chunk.toString().split('\n').length - 1;
+  totalLines += lines;
 
   let bytes = chunk.length;
   totalBytes += bytes;
 
-  const obj = new ChunkData(process.hrtime(chunkstart), bytes, lineCount);
+  let time = process.hrtime(start);
+  let ms = (time[0] * 1000) + (time[1]/1000000)
+
+  const obj = new ProcessData(ms, bytes, lines);
 
   return obj;
 }
@@ -86,32 +82,36 @@ function issueIndividualReport(chunk) {
 
 function issueTotalReport() {
   let totalTime = process.hrtime(start);
-  let bps = Math.round((totalBytes / (totalTime[1]/1000000) * 100)) / 100;
+  let ts = ((totalTime[0] * 1000) + (totalTime[1]/1000000)) / 1000
+  let bps = totalBytes / ts
 
   return `Report: ${totalLines} lines processed at an average speed of ${bps} bytes/second.\n`;
 }
 
+function issueReport(data) {
+    const seconds = (data['elapsedTime'] / 1000);
+    const bps = (data['totalBytes'] / seconds);
 
-function logger(reports) {
-  fs.appendFile('logfile', reports['iReport'], err => {
-    if (err) throw err;
-  })
+    return `Report: ${data['totalLines']} lines processed at an average speed of ${bps} bytes/second.\n`;
+}
 
-  fs.appendFile('logfile', reports['tReport'], err => {
+
+function logger(report) {
+
+  fs.appendFile('logfile', report, err => {
     if (err) throw err;
   });
 
   fs.appendFile('logfile', '--- --- ---\n', err => {
     if (err) throw err;
 
-    if(process.argv[2] == '--verbose') console.log(reports['iReport']);
-    console.log(reports['tReport']);
+    console.log(report);
     console.log('...saved to logfile.');
   })
 }
 
-function ChunkData (elapsedTime, bytes, lines){
+function ProcessData (elapsedTime, totalBytes, totalLines){
   this.elapsedTime = elapsedTime;
-  this.bytes = bytes;
-  this.lines = lines;
+  this.totalBytes = totalBytes;
+  this.totalLines = totalLines;
 }
