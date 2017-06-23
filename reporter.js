@@ -28,51 +28,40 @@ const reporter = new stream.Duplex({
     reporter.push(report);
     callback();
   },
-  read(size){/*...*/}
+  read(size) {/*...*/}
 });
 
 
 
-(function setRate() {
-  const input = process.argv[3];
-  !!Number(input) ? rate = input : rate = 1000;
-})();
+function report() {
+  (function setRate() {
+    const input = process.argv[3];
+    !!Number(input) ? rate = input : rate = 1000;
+  })();
 
-(function startClock(){
-  if (!start) start = process.hrtime();
-})();
+  (function startClock(){
+    if (!start) start = process.hrtime();
+  })();
 
-if (process.argv[2]) file_grower.growFile(rate, process.argv[2]);
+  if (process.argv[2]) file_grower.growFile(rate, process.argv[2]);
 
-process.stdin.on('data', data => {
-  chunkstart = process.hrtime();
+  process.stdin.on('data', data => {
+    chunkstart = process.hrtime();
 
-  objectifier.write(data, () => {});
-});
+    objectifier.write(data, () => {});
+  });
 
-objectifier.on('data', data => {
-  reporter.write(data, () => {});
-});
+  objectifier.on('data', data => {
+    reporter.write(data, () => {});
+  });
 
-reporter.on('data', data => {
-  logger(data);
-});
-
-
+  reporter.on('data', data => {
+    logger(data);
+  });
+}
 
 function objectifyChunk(chunk){
-  let lines = chunk.toString().split('\n').length - 1;
-  totalLines += lines;
-
-  let bytes = chunk.length;
-  totalBytes += bytes;
-
-  let time = process.hrtime(start);
-  let ms = (time[0] * 1000) + (time[1]/1000000);
-
-  const obj = new ProcessData(ms, totalBytes, totalLines);
-
-  return obj;
+  return new ProcessData(setms(), setTotalBytes(chunk), setTotalLines(chunk));
 }
 
 function issueReport(data) {
@@ -82,7 +71,6 @@ function issueReport(data) {
   return `Report: ${data['totalLines']} lines processed at an average speed of ${bps} bytes/second.\n`;
 }
 
-
 function logger(report) {
   fs.appendFile('logfile', report, () => {});
   fs.appendFile('logfile', '--- --- ---\n', () => {
@@ -91,8 +79,35 @@ function logger(report) {
   });
 }
 
+function setms() {
+  let time = process.hrtime(start);
+  let ms = (time[0] * 1000) + (time[1]/1000000);
+
+  return ms;
+}
+
+function setTotalBytes(chunk) {
+  let bytes = chunk.length;
+  totalBytes += bytes;
+
+  return totalBytes;
+}
+
+function setTotalLines(chunk) {
+  let lines = chunk.toString().split('\n').length - 1;
+  totalLines += lines;
+
+  return totalLines;
+}
+
+
+
 function ProcessData (elapsedTime, totalBytes, totalLines){
   this.elapsedTime = elapsedTime;
   this.totalBytes = totalBytes;
   this.totalLines = totalLines;
 }
+
+report();
+
+module.exports.report = report;
