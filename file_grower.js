@@ -7,16 +7,13 @@ const maxLines = maxOf(50);
 function growFile(file) {
 
   for(let line = 0; line < maxLines; line++) {
-    let chunk = writeLine();
+    const chunk = writeLine(maxOf(20));
 
-    fs.appendFile(file, chunk, err => {
-      if (err) throw err;
-    })
+    fs.appendFile(file, chunk, () => {})
   }
 }
 
-function writeLine() {
-  let wordCount = maxOf(20);
+function writeLine(wordCount) {
   let line = "";
 
   for(let i = 0; i < wordCount; i++) {
