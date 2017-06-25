@@ -55,8 +55,47 @@ function report(input) {
 
 function checkOptions(filename, rate ) {
   if (filename) {
-    file_grower.growFile(setRate(rate), filename);
+    if (notCoreFile(filename)) {
+      file_grower.growFile(setRate(rate), filename);
+    }
   }
+}
+
+function notCoreFile(filename) {
+  let validity = true;
+
+  switch(filename) {
+    case 'file_grower.js':
+      invalidFileMessage(filename);
+      validity = false;
+      break;
+    case 'logfile':
+      invalidFileMessage(filename);
+      validity = false;
+      break;
+    case 'README.md':
+      invalidFileMessage(filename);
+      validity = false;
+      break;
+    case 'reporter.js':
+      invalidFileMessage(filename);
+      validity = false;
+      break;
+    case 'test.js':
+      invalidFileMessage(filename);
+      validity = false;
+      break;
+    case 'text.txt':
+      invalidFileMessage(filename);
+      validity = false;
+      break;
+  }
+
+  return validity;
+}
+
+function invalidFileMessage(filename) {
+  console.log(`Cannot grow ${filename} as it is a core file.`);
 }
 
 function setRate(input) {
@@ -64,7 +103,7 @@ function setRate(input) {
 
   !!Number(input) ? rate = input : rate = 1000;
   return rate;
-};
+}
 
 function objectifyChunk(chunk){
   return new ProcessData(
@@ -86,7 +125,7 @@ function setTotalBytes(chunk) {
 }
 
 function setTotalLines(chunk) {
-  const lines = chunk.toString().split('\n').length - 1;
+  const lines = chunk.toString().split('\n').length;
   totalLines += lines;
 
   return totalLines;
@@ -110,8 +149,6 @@ function logger(report) {
   fs.appendFile('logfile', '--- --- ---\n', () => {});
 }
 
-
-
 function ProcessData (elapsedTime, totalBytes, totalLines){
   this.elapsedTime = elapsedTime;
   this.totalBytes = totalBytes;
@@ -121,3 +158,30 @@ function ProcessData (elapsedTime, totalBytes, totalLines){
 report(process.stdin);
 
 module.exports.report = report;
+module.exports.ProcessData = ProcessData;
+module.exports.setRate = setRate;
+module.exports.setms = setms;
+module.exports.setTotalBytes = setTotalBytes;
+module.exports.setTotalLines = setTotalLines;
+module.exports.objectifyChunk = objectifyChunk;
+module.exports.resetStart = resetStart;
+module.exports.resetTotalLines = resetTotalLines;
+module.exports.resetTotalBytes = resetTotalBytes;
+
+
+// For Testing Purposes
+
+function resetStart(input) {
+  startTime = [0,0];
+  return startTime;
+}
+
+function resetTotalLines(input) {
+  totalLines = 0;
+  return totalLines;
+}
+
+function resetTotalBytes(input) {
+  totalBytes = 0;
+  return totalBytes;
+}
