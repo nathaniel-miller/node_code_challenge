@@ -8,6 +8,8 @@ let startTime;
 let totalLines = 0;
 let totalBytes = 0;
 
+
+/* - Streams - */
 const objectifier = new stream.Duplex({
   objectMode: true,
 
@@ -34,6 +36,8 @@ const reporter = new stream.Duplex({
 
 
 
+
+/* - Main Process - */
 function report(input) {
   checkOptions(process.argv[2], process.argv[3]);
   startTime = process.hrtime();
@@ -46,13 +50,16 @@ function report(input) {
     reporter.write(data, () => {});
   });
 
-  reporter.on('data', data => {
-    logger(data);
+  reporter.on('data', report => {
+    logger(report);
   });
 }
 
+report(process.stdin);
 
 
+
+/* - Helpers - */
 function checkOptions(filename, rate ) {
   if (filename) {
     if (notCoreFile(filename)) {
@@ -60,6 +67,7 @@ function checkOptions(filename, rate ) {
     }
   }
 }
+
 
 function notCoreFile(filename) {
   let validity = true;
@@ -94,9 +102,11 @@ function notCoreFile(filename) {
   return validity;
 }
 
+
 function invalidFileMessage(filename) {
   console.log(`Cannot grow ${filename} as it is a core file.`);
 }
+
 
 function setRate(input) {
   let rate;
@@ -104,6 +114,7 @@ function setRate(input) {
   !!Number(input) ? rate = input : rate = 1000;
   return rate;
 }
+
 
 function objectifyChunk(chunk){
   return new ProcessData(
@@ -113,9 +124,11 @@ function objectifyChunk(chunk){
   );
 }
 
+
 function setms(hrtime) {
   return (hrtime[0] * 1000) + (hrtime[1]/1000000);
 }
+
 
 function setTotalBytes(chunk) {
   const bytes = chunk.length;
@@ -124,6 +137,7 @@ function setTotalBytes(chunk) {
   return totalBytes;
 }
 
+
 function setTotalLines(chunk) {
   const lines = chunk.toString().split('\n').length;
   totalLines += lines;
@@ -131,17 +145,21 @@ function setTotalLines(chunk) {
   return totalLines;
 }
 
+
 function issueReport(data) {
   return `Report: ${data['totalLines']} lines processed at an average speed of ${setbps(data)} bytes/second.\n`;
 }
+
 
 function setbps(data) {
   const seconds = (data['elapsedTime'] / 1000);
   return (data['totalBytes'] / seconds);
 }
 
+
 function logger(report) {
   fs.appendFile('logfile', report, () => {
+    storeReportForTest = report;
     console.log(report);
     console.log('. . .saved to logfile.');
   });
@@ -149,28 +167,18 @@ function logger(report) {
   fs.appendFile('logfile', '--- --- ---\n', () => {});
 }
 
+
+
+/* - Constructor - */
 function ProcessData (elapsedTime, totalBytes, totalLines){
   this.elapsedTime = elapsedTime;
   this.totalBytes = totalBytes;
   this.totalLines = totalLines;
 }
 
-report(process.stdin);
-
-module.exports.report = report;
-module.exports.ProcessData = ProcessData;
-module.exports.setRate = setRate;
-module.exports.setms = setms;
-module.exports.setTotalBytes = setTotalBytes;
-module.exports.setTotalLines = setTotalLines;
-module.exports.objectifyChunk = objectifyChunk;
-module.exports.resetStart = resetStart;
-module.exports.resetTotalLines = resetTotalLines;
-module.exports.resetTotalBytes = resetTotalBytes;
 
 
-// For Testing Purposes
-
+/* - For Testing Purposes - */
 function resetStart(input) {
   startTime = [0,0];
   return startTime;
@@ -185,3 +193,18 @@ function resetTotalBytes(input) {
   totalBytes = 0;
   return totalBytes;
 }
+
+
+
+/* - Functions to Export - */
+module.exports.setRate = setRate;
+module.exports.setms = setms;
+module.exports.setbps = setbps;
+module.exports.setTotalBytes = setTotalBytes;
+module.exports.setTotalLines = setTotalLines;
+module.exports.objectifyChunk = objectifyChunk;
+module.exports.resetStart = resetStart;
+module.exports.resetTotalLines = resetTotalLines;
+module.exports.resetTotalBytes = resetTotalBytes;
+module.exports.notCoreFile = notCoreFile;
+module.exports.issueReport = issueReport;
