@@ -1,5 +1,4 @@
 const assert = require('assert');
-const stream = require('stream');
 const reporter = require('./reporter');
 const file_grower = require('./file_grower');
 
